@@ -9,15 +9,7 @@ int main(void) {
   };
 
   application* app = application_new();
-
-  SDL_Event event;
-  while(app->running) {
-    while(SDL_PollEvent(&event)) {
-      if (event.type == SDL_EVENT_QUIT) {
-	app->running = false;
-      }
-    }
-  }
+  application_main(app);
 
   SDL_Quit();
   return 0;
