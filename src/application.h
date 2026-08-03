@@ -16,16 +16,18 @@ typedef struct application {
  
   const bool* keyboard;
 
+  bool must_update_on_input; 
+
+  bool must_move_pad_up;
+  bool must_move_pad_down;
+
   sprite_data** sprite_data_set;
   sprite** sprite_set;
 
   bool running;
 } application;
 
-application* application_new();
-
-bool application_event_handling(application*);
-bool application_render(application*);
+application* application_new(void);
 bool application_main(application*);
 
 #endif

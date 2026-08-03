@@ -1,5 +1,7 @@
 #include <stdio.h>
+
 #include <SDL3/SDL.h>
+
 #include "application.h"
 
 int main(void) {
