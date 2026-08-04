@@ -64,6 +64,8 @@ application* application_new(void) {
   app->must_move_pad_up      = false;
   app->must_move_pad_down    = false;
 
+  app->delta_time = 0;
+
   app->running = true;
 
   SDL_ShowWindow(app->window);
@@ -95,7 +97,6 @@ bool application_close(application* app) {
 }
 
 bool application_event_handling(application* app) {
-  const char* func_title = "application_event_handling()";
 
   SDL_Event event;
   while(SDL_PollEvent(&event)) {
@@ -112,7 +113,6 @@ bool application_event_handling(application* app) {
 } 
 
 bool application_update_on_input(application* app) {
-  const char* func_title = "application_update_on_input()";
   uint32_t speed = 5;
   if (app->must_move_pad_up) {
     app->sprite_set[SPRITE_SET_PAD]->y -= speed;
@@ -172,6 +172,9 @@ bool application_render(application* app) {
 bool application_main(application* app) {
   const char* func_title = "application_main()";
 
+  uint64_t end_time = 0;
+  uint64_t start_time = SDL_GetTicksNS();
+
   while(app->running) {
     application_input_handling(app);
 
@@ -194,8 +197,10 @@ bool application_main(application* app) {
       SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : application_render() returned false", func_title);
       return false;
     }
-    SDL_Delay(10);
-  }
 
+    end_time = SDL_GetTicksNS();
+    app->delta_time = end_time - start_time;
+    start_time = SDL_GetTicksNS();
+  }
   return true;
 }

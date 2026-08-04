@@ -24,6 +24,8 @@ typedef struct application {
   sprite_data** sprite_data_set;
   sprite** sprite_set;
 
+  uint64_t delta_time;
+
   bool running;
 } application;
 
