@@ -113,13 +113,13 @@ bool application_event_handling(application* app) {
 } 
 
 bool application_update_on_input(application* app) {
-  uint32_t speed = 5;
+  uint32_t speed = 1;
   if (app->must_move_pad_up) {
-    app->sprite_set[SPRITE_SET_PAD]->y -= speed;
+    app->sprite_set[SPRITE_SET_PAD]->y -= speed * app->delta_time;
   }
 
   if (app->must_move_pad_down) {
-    app->sprite_set[SPRITE_SET_PAD]->y += speed;
+    app->sprite_set[SPRITE_SET_PAD]->y += speed * app->delta_time;
   }
 
   return true;
@@ -173,7 +173,7 @@ bool application_main(application* app) {
   const char* func_title = "application_main()";
 
   uint64_t end_time = 0;
-  uint64_t start_time = SDL_GetTicksNS();
+  uint64_t start_time = SDL_GetTicks();
 
   while(app->running) {
     application_input_handling(app);
@@ -197,10 +197,11 @@ bool application_main(application* app) {
       SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : application_render() returned false", func_title);
       return false;
     }
+    SDL_Delay(8);
 
-    end_time = SDL_GetTicksNS();
+    end_time = SDL_GetTicks();
     app->delta_time = end_time - start_time;
-    start_time = SDL_GetTicksNS();
+    start_time = SDL_GetTicks();
   }
   return true;
 }
