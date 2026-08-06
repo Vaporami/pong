@@ -30,6 +30,7 @@ typedef struct application {
 } application;
 
 application* application_new(void);
+void application_destroy(application*);
 bool application_main(application*);
 
 #endif

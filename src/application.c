@@ -55,9 +55,25 @@ application* application_new(void) {
   app->sprite_data_set = data_set;
 
   sprite** sprite_set = (sprite**)malloc(3 * sizeof(sprite*));
-  sprite_set[0] = sprite_new(data_set[0], 100, (app->height / 2) - (data_set[0]->src_rect.h / 2));
-  sprite_set[1] = sprite_new(data_set[1], (app->width) - 100 - (data_set[1]->src_rect.w), (app->height / 2) - (data_set[1]->src_rect.h / 2));
-  sprite_set[2] = sprite_new(data_set[2], (app->width / 2) - (data_set[2]->src_rect.w / 2), (app->height / 2) - (data_set[2]->src_rect.h / 2));
+
+  SDL_FRect drect = {
+    .x = 100,
+    .y = (app->height / 2) - (data_set[0]->src_rect.h / 2)
+  };
+  sprite_set[0] = sprite_new(data_set[0], &drect, NULL);
+
+  drect = (SDL_FRect) {
+    .x = app->width - 100 - data_set[1]->src_rect.w,
+    .y = (app->height / 2) - (data_set[1]->src_rect.h / 2)
+  };
+  sprite_set[1] = sprite_new(data_set[1], &drect, NULL);
+
+  drect = (SDL_FRect) {
+    .x = (app->width / 2) - (data_set[2]->src_rect.w / 2),
+    .y = (app->height / 2) - (data_set[2]->src_rect.h / 2)
+  };
+  sprite_set[2] = sprite_new(data_set[2], &drect, NULL);
+  
   app->sprite_set = sprite_set;
 
   app->must_update_on_input  = false;
@@ -70,6 +86,15 @@ application* application_new(void) {
 
   SDL_ShowWindow(app->window);
   return app;
+}
+
+void application_destroy(application* app) {
+  for (int i = 0; i < 3; i++) {
+    free(app->sprite_set[i]);
+    free(app->sprite_data_set[i]);
+  }
+  SDL_DestroyRenderer(app->renderer);
+  SDL_DestroyWindow(app->window);
 }
 
 bool application_input_handling(application* app) {
@@ -113,13 +138,24 @@ bool application_event_handling(application* app) {
 } 
 
 bool application_update_on_input(application* app) {
-  uint32_t speed = 1;
+  const char* func_title = "application_update_on_input()";
+
+  int32_t speed = 100;
+
   if (app->must_move_pad_up) {
-    app->sprite_set[SPRITE_SET_PAD]->y -= speed * app->delta_time;
+    SDL_FPoint vector = { .x = 0, .y = speed * -1 };
+    if (!sprite_move_cbf(app->sprite_set[SPRITE_SET_PAD], &vector, app->delta_time)) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite_move returned false!", func_title);
+      return false;
+    }
   }
 
   if (app->must_move_pad_down) {
-    app->sprite_set[SPRITE_SET_PAD]->y += speed * app->delta_time;
+    SDL_FPoint vector = { .x = 0, .y = speed };
+    if (!sprite_move_cbf(app->sprite_set[SPRITE_SET_PAD], &vector, app->delta_time)) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite_move returned false!", func_title);
+      return false;
+    }
   }
 
   return true;
@@ -144,17 +180,17 @@ bool application_render(application* app) {
 
 
 
-  if (!sprite_render(app->renderer, app->sprite_set[SPRITE_SET_PAD], true)) {
+  if (!sprite_render(app->renderer, app->sprite_set[SPRITE_SET_PAD], true, true, true)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite_render() returned false", func_title);
     return false;
   }
 
-  if (!sprite_render(app->renderer, app->sprite_set[SPRITE_SET_RPAD], true)) {
+  if (!sprite_render(app->renderer, app->sprite_set[SPRITE_SET_RPAD], true, true, true)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite_render() returned false", func_title);
     return false;
   }
 
-  if (!sprite_render(app->renderer, app->sprite_set[SPRITE_SET_BALL], true)) {
+  if (!sprite_render(app->renderer, app->sprite_set[SPRITE_SET_BALL], true, true, true)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite_render() returned false", func_title);
     return false;
   }
@@ -197,7 +233,6 @@ bool application_main(application* app) {
       SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : application_render() returned false", func_title);
       return false;
     }
-    SDL_Delay(8);
 
     end_time = SDL_GetTicks();
     app->delta_time = end_time - start_time;

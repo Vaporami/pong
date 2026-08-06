@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include <SDL3/SDL.h>
 
 #include "application.h"
@@ -11,7 +9,10 @@ int main(void) {
   };
 
   application* app = application_new();
+
   application_main(app);
+
+  application_destroy(app);
 
   SDL_Quit();
   return 0;
