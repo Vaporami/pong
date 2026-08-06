@@ -18,6 +18,7 @@ typedef struct application {
 
   bool must_update_on_input; 
 
+  // These two bools should be in a different "game" (or smth like that) struct
   bool must_move_pad_up;
   bool must_move_pad_down;
 

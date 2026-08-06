@@ -183,6 +183,30 @@ bool sprite_move_dt(sprite* spr, float x_per_second, float y_per_second, uint64_
 
 // Instead of setting the new position directly, we calculate the difference between the old and new positions.
 // Then move the sprite and its internals by the difference with sprite_move() function, because that's easier, than every time recalculate center and pivot.
+bool sprite_set_x(sprite*spr, float new_x) {
+  const char* func_title = "sprite_set_x()";
+
+  if (spr == NULL) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : spr appeared to be NULL!", func_title);
+    return false;
+  }
+
+  float diff = new_x - spr->dest_rect.x;
+  return sprite_move(spr, diff, 0);
+}
+
+bool sprite_set_y(sprite*spr, float new_y) {
+  const char* func_title = "sprite_set_y()";
+
+  if (spr == NULL) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : spr appeared to be NULL!", func_title);
+    return false;
+  }
+
+  float diff = new_y - spr->dest_rect.y;
+  return sprite_move(spr, 0, diff);
+}
+
 bool sprite_set_xy(sprite* spr, float new_x, float new_y) {
   const char* func_title = "sprite_set_xy()";
 
@@ -191,9 +215,52 @@ bool sprite_set_xy(sprite* spr, float new_x, float new_y) {
     return false;
   }
 
-  float diff_x = new_x - spr->dest_rect.x;
-  float diff_y = new_y - spr->dest_rect.y;
-
-  return sprite_move(spr, diff_x, diff_y);
+  bool did_both_returned_true = sprite_set_x(spr, new_x) && sprite_set_y(spr, new_y);
+  return did_both_returned_true;
 }
 
+bool sprite_center_by_pivot(sprite* spr, bool on_x, bool on_y, uint32_t window_width, uint32_t window_height) {
+  const char* func_title = "sprite_center_by_pivot()";
+
+  if (spr == NULL) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : spr appeared to be NULL!", func_title);
+    return false;
+  }
+
+  if (on_x) {
+    sprite_set_xy(spr, window_width / 2, spr->dest_rect.y);
+    float diff = spr->dest_rect.x - spr->pivot.x;
+    sprite_move(spr, diff, 0);
+  }
+
+  if (on_y) {
+    sprite_set_xy(spr, spr->dest_rect.x, window_height / 2);
+    float diff = spr->dest_rect.y - spr->pivot.y;
+    sprite_move(spr, 0, diff);
+  }
+
+  return true;
+}
+
+bool sprite_center_by_center(sprite* spr, bool on_x, bool on_y, uint32_t window_width, uint32_t window_height) {
+  const char* func_title = "sprite_center_by_center()";
+
+  if (spr == NULL) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : spr appeared to be NULL!", func_title);
+    return false;
+  }
+
+  if (on_x) {
+    sprite_set_xy(spr, window_width / 2, spr->dest_rect.y);
+    float diff = spr->dest_rect.x - spr->center.x;
+    sprite_move(spr, diff, 0);
+  }
+
+  if (on_y) {
+    sprite_set_xy(spr, spr->dest_rect.x, window_height / 2);
+    float diff = spr->dest_rect.y - spr->center.y;
+    sprite_move(spr, 0, diff);
+  }
+
+  return true;
+}

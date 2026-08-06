@@ -56,24 +56,17 @@ application* application_new(void) {
 
   sprite** sprite_set = (sprite**)malloc(3 * sizeof(sprite*));
 
-  SDL_FRect drect = {
-    .x = 100,
-    .y = (app->height / 2) - (data_set[0]->src_rect.h / 2)
-  };
-  sprite_set[0] = sprite_new(data_set[0], &drect, NULL);
+  sprite_set[0] = sprite_new(data_set[0], NULL, NULL);
+  sprite_set[1] = sprite_new(data_set[1], NULL, NULL);
+  sprite_set[2] = sprite_new(data_set[2], NULL, NULL);
 
-  drect = (SDL_FRect) {
-    .x = app->width - 100 - data_set[1]->src_rect.w,
-    .y = (app->height / 2) - (data_set[1]->src_rect.h / 2)
-  };
-  sprite_set[1] = sprite_new(data_set[1], &drect, NULL);
+  sprite_center_by_center(sprite_set[SPRITE_SET_PAD], false, true, app->width, app->height);
+  sprite_center_by_center(sprite_set[SPRITE_SET_RPAD], false, true, app->width, app->height);
+  sprite_center_by_center(sprite_set[SPRITE_SET_BALL], true, true, app->width, app->height);
 
-  drect = (SDL_FRect) {
-    .x = (app->width / 2) - (data_set[2]->src_rect.w / 2),
-    .y = (app->height / 2) - (data_set[2]->src_rect.h / 2)
-  };
-  sprite_set[2] = sprite_new(data_set[2], &drect, NULL);
-  
+  sprite_set_x(sprite_set[SPRITE_SET_PAD], 100.0f);
+  sprite_set_x(sprite_set[SPRITE_SET_RPAD], (float)app->width - 100.0f - sprite_set[SPRITE_SET_RPAD]->dest_rect.w);
+
   app->sprite_set = sprite_set;
 
   app->must_update_on_input  = false;
