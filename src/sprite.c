@@ -5,7 +5,7 @@
 #include "sprite.h"
 
 sprite* sprite_new(sprite_data* init_data, SDL_FRect* init_dest_rect, SDL_FPoint* init_pivot) {
-  const char* func_title = "sprite_new(sprite_data*, SDL_FRect*)";
+  const char* func_title = "sprite_new()";
 
   sprite* spr = (sprite*)malloc(sizeof(sprite));
 
@@ -108,7 +108,6 @@ bool sprite_render(SDL_Renderer* renderer, sprite* spr, bool render_dest_rect, b
   }
 
   if (render_center) {
-    // FIXME: this code is also wrong... probably... or not
     SDL_FRect rect = { .x = spr->center.x - 1, .y = spr->center.y - 1 , .w = 3, .h = 3};
 
     if (!SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, SDL_ALPHA_OPAQUE)) {
@@ -140,7 +139,7 @@ bool sprite_render(SDL_Renderer* renderer, sprite* spr, bool render_dest_rect, b
   return true;
 }
 
-bool sprite_move(sprite* spr, SDL_FPoint* vector) {
+bool sprite_move(sprite* spr, float x, float y) {
   const char* func_title = "sprite_move()";
 
   if (spr == NULL) {
@@ -148,52 +147,43 @@ bool sprite_move(sprite* spr, SDL_FPoint* vector) {
     return false;
   }
 
-  if (vector == NULL) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : vector appeared to be NULL!", func_title);
-    return false;
-  }
+  spr->dest_rect.x += x;
+  spr->dest_rect.y += y;
 
-  spr->dest_rect.x += vector->x;
-  spr->dest_rect.y += vector->y;
+  spr->pivot.x += x;
+  spr->pivot.y += y;
 
-  spr->pivot.x += vector->x;
-  spr->pivot.y += vector->y;
-
-  spr->center.x += vector->x;
-  spr->center.y += vector->y;
+  spr->center.x += x;
+  spr->center.y += y;
 
   return true;
 }
 
-bool sprite_move_cbf(sprite* spr, SDL_FPoint* vector, uint64_t delta_time) {
+bool sprite_move_dt(sprite* spr, float x_per_second, float y_per_second, uint64_t delta_time) {
   const char* func_title = "sprite_move()";
 
   if (spr == NULL) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : spr appeared to be NULL!", func_title);
-    return false;
-  }
-
-  if (vector == NULL) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : vector appeared to be NULL!", func_title);
     return false;
   }
 
   float delta_time_seconds = (float)delta_time / 1000.0f;
 
-  spr->dest_rect.x += vector->x * delta_time_seconds;
-  spr->dest_rect.y += vector->y * delta_time_seconds;
+  spr->dest_rect.x += x_per_second * delta_time_seconds;
+  spr->dest_rect.y += y_per_second * delta_time_seconds;
 
-  spr->pivot.x += vector->x * delta_time_seconds;
-  spr->pivot.y += vector->y * delta_time_seconds;
+  spr->pivot.x += x_per_second * delta_time_seconds;
+  spr->pivot.y += y_per_second * delta_time_seconds;
 
-  spr->center.x += vector->x * delta_time_seconds;
-  spr->center.y += vector->y * delta_time_seconds;
+  spr->center.x += x_per_second * delta_time_seconds;
+  spr->center.y += y_per_second * delta_time_seconds;
 
   return true;
 }
 
-// instead of setting the new position directly, we calculate the difference between the old and new positions, and then move the sprite and its internals by the difference with sprite_move() function, because that's easier, than every time recalculate center and pivot.
-bool sprite_set_xy(sprite* spr, SDL_FPoint* new_position) {
+// Instead of setting the new position directly, we calculate the difference between the old and new positions.
+// Then move the sprite and its internals by the difference with sprite_move() function, because that's easier, than every time recalculate center and pivot.
+bool sprite_set_xy(sprite* spr, float new_x, float new_y) {
   const char* func_title = "sprite_set_xy()";
 
   if (spr == NULL) {
@@ -201,13 +191,9 @@ bool sprite_set_xy(sprite* spr, SDL_FPoint* new_position) {
     return false;
   }
 
-  if (new_position == NULL) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : new_position appeared to be NULL!", func_title);
-    return false;
-  }
+  float diff_x = new_x - spr->dest_rect.x;
+  float diff_y = new_y - spr->dest_rect.y;
 
-  SDL_FPoint difference = { .x = new_position->x - spr->dest_rect.x, .y = new_position->y - spr->dest_rect.y };
-
-  return sprite_move(spr, &difference);
+  return sprite_move(spr, diff_x, diff_y);
 }
 

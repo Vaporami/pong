@@ -117,7 +117,7 @@ bool application_input_handling(application* app) {
 bool application_close(application* app) {
   const char* func_title = "application_close()";
   app->running = false;
-  SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s : intended quit call, exiting...", func_title);
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : intended quit call, exiting...", func_title);
   return false;
 }
 
@@ -140,19 +140,17 @@ bool application_event_handling(application* app) {
 bool application_update_on_input(application* app) {
   const char* func_title = "application_update_on_input()";
 
-  int32_t speed = 100;
+  int32_t speed = 500;
 
   if (app->must_move_pad_up) {
-    SDL_FPoint vector = { .x = 0, .y = speed * -1 };
-    if (!sprite_move_cbf(app->sprite_set[SPRITE_SET_PAD], &vector, app->delta_time)) {
+    if (!sprite_move_dt(app->sprite_set[SPRITE_SET_PAD], 0, -speed, app->delta_time)) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite_move returned false!", func_title);
       return false;
     }
   }
 
   if (app->must_move_pad_down) {
-    SDL_FPoint vector = { .x = 0, .y = speed };
-    if (!sprite_move_cbf(app->sprite_set[SPRITE_SET_PAD], &vector, app->delta_time)) {
+    if (!sprite_move_dt(app->sprite_set[SPRITE_SET_PAD], 0, speed, app->delta_time)) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite_move returned false!", func_title);
       return false;
     }
@@ -162,7 +160,7 @@ bool application_update_on_input(application* app) {
 }
 
 bool application_update_on_events(application* app) {
-  return true;
+  return app->running;
 }
 
 bool application_render(application* app) {
