@@ -11,8 +11,8 @@
 #define SPRITE_SET_RPAD 1
 #define SPRITE_SET_BALL 2
 
-application* application_new(void) {
-  const char* func_title = "application_new()";
+Application* Application_new(void) {
+  const char* func_title = "Application_new()";
 
   const uint32_t  WIDTH   = 1024;
   const uint32_t  HEIGHT  = 576;
@@ -20,7 +20,7 @@ application* application_new(void) {
 
   SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Creating a new application's instance...", func_title);
 
-  application* app = (application*)malloc(sizeof(application));
+  Application* app = (Application*)malloc(sizeof(Application));
   if (app == NULL) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : malloc() failed!", func_title);
     return NULL;
@@ -48,24 +48,25 @@ application* application_new(void) {
 
   app->keyboard = SDL_GetKeyboardState(NULL);
 
-  sprite_data** data_set = (sprite_data**)malloc(3 * sizeof(sprite_data*));
-  data_set[0] = sprite_data_new_from_bmp(app->renderer, "./data/bmps/pad.bmp", NULL);
-  data_set[1] = sprite_data_new_from_bmp(app->renderer, "./data/bmps/rpad.bmp", NULL);
-  data_set[2] = sprite_data_new_from_bmp(app->renderer, "./data/bmps/ball.bmp", NULL);
+  Sprite_data** data_set = (Sprite_data**)malloc(3 * sizeof(Sprite_data*));
+  data_set[0] = Sprite_data_new_from_bmp(app->renderer, "./data/bmps/pad.bmp", NULL);
+  data_set[1] = Sprite_data_new_from_bmp(app->renderer, "./data/bmps/rpad.bmp", NULL);
+  data_set[2] = Sprite_data_new_from_bmp(app->renderer, "./data/bmps/ball.bmp", NULL);
+
   app->sprite_data_set = data_set;
 
-  sprite** sprite_set = (sprite**)malloc(3 * sizeof(sprite*));
+  Sprite** sprite_set = (Sprite**)malloc(3 * sizeof(Sprite*));
 
-  sprite_set[0] = sprite_new(data_set[0], NULL, NULL);
-  sprite_set[1] = sprite_new(data_set[1], NULL, NULL);
-  sprite_set[2] = sprite_new(data_set[2], NULL, NULL);
+  sprite_set[0] = Sprite_new(data_set[0], Box_new(NULL));
+  sprite_set[1] = Sprite_new(data_set[1], Box_new(NULL));
+  sprite_set[2] = Sprite_new(data_set[2], Box_new(NULL));
 
-  sprite_center_by_center(sprite_set[SPRITE_SET_PAD], false, true, app->width, app->height);
-  sprite_center_by_center(sprite_set[SPRITE_SET_RPAD], false, true, app->width, app->height);
-  sprite_center_by_center(sprite_set[SPRITE_SET_BALL], true, true, app->width, app->height);
+  Sprite_set_y(sprite_set[SPRITE_SET_PAD],  &(sprite_set[SPRITE_SET_PAD]->box->center), (app->height / 2));
+  Sprite_set_y(sprite_set[SPRITE_SET_RPAD], &(sprite_set[SPRITE_SET_RPAD]->box->center), (app->height / 2));
+  Sprite_set_xy(sprite_set[SPRITE_SET_BALL], &(sprite_set[SPRITE_SET_BALL]->box->center), (app->width / 2), (app->height / 2));
 
-  sprite_set_x(sprite_set[SPRITE_SET_PAD], 100.0f);
-  sprite_set_x(sprite_set[SPRITE_SET_RPAD], (float)app->width - 100.0f - sprite_set[SPRITE_SET_RPAD]->dest_rect.w);
+  Sprite_set_x(sprite_set[SPRITE_SET_PAD], &(sprite_set[SPRITE_SET_PAD]->box->center), 100.0f);
+  Sprite_set_x(sprite_set[SPRITE_SET_RPAD], &(sprite_set[SPRITE_SET_RPAD]->box->center), (float)app->width - 100.0f);
 
   app->sprite_set = sprite_set;
 
@@ -77,11 +78,12 @@ application* application_new(void) {
 
   app->running = true;
 
+
   SDL_ShowWindow(app->window);
   return app;
 }
 
-void application_destroy(application* app) {
+void Application_destroy(Application* app) {
   for (int i = 0; i < 3; i++) {
     free(app->sprite_set[i]);
     free(app->sprite_data_set[i]);
@@ -90,7 +92,7 @@ void application_destroy(application* app) {
   SDL_DestroyWindow(app->window);
 }
 
-bool application_input_handling(application* app) {
+bool Application_input_handling(Application* app) {
   if (app->keyboard[SDL_SCANCODE_W]) {
     app->must_move_pad_up = true;
   } else {
@@ -107,22 +109,22 @@ bool application_input_handling(application* app) {
   return app->must_update_on_input;
 }
 
-bool application_close(application* app) {
-  const char* func_title = "application_close()";
+bool Application_close(Application* app) {
+  const char* func_title = "Application_close()";
   app->running = false;
   SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : intended quit call, exiting...", func_title);
   return false;
 }
 
-bool application_event_handling(application* app) {
+bool Application_event_handling(Application* app) {
 
   SDL_Event event;
   while(SDL_PollEvent(&event)) {
     if (event.type == SDL_EVENT_QUIT) {
-      application_close(app);
+      Application_close(app);
     } else if (event.type == SDL_EVENT_KEY_DOWN) {
       if (event.key.scancode == SDL_SCANCODE_Q) {
-	application_close(app);
+	Application_close(app);
       }
     }
   }
@@ -130,34 +132,35 @@ bool application_event_handling(application* app) {
   return true;
 } 
 
-bool application_update_on_input(application* app) {
-  const char* func_title = "application_update_on_input()";
+bool Application_update_on_input(Application* app) {
+  const char* func_title = "Application_update_on_input()";
 
-  int32_t speed = 500;
+  float speed = 500.0f;
 
   if (app->must_move_pad_up) {
-    if (!sprite_move_dt(app->sprite_set[SPRITE_SET_PAD], 0, -speed, app->delta_time)) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite_move returned false!", func_title);
+    if (!Sprite_move_dt(app->sprite_set[SPRITE_SET_PAD], 0, -speed, app->delta_time)) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_move returned false!", func_title);
       return false;
     }
   }
 
   if (app->must_move_pad_down) {
-    if (!sprite_move_dt(app->sprite_set[SPRITE_SET_PAD], 0, speed, app->delta_time)) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite_move returned false!", func_title);
+    if (!Sprite_move_dt(app->sprite_set[SPRITE_SET_PAD], 0, speed, app->delta_time)) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_move returned false!", func_title);
       return false;
     }
   }
 
+
   return true;
 }
 
-bool application_update_on_events(application* app) {
+bool Application_update_on_events(Application* app) {
   return app->running;
 }
 
-bool application_render(application* app) {
-  const char* func_title = "application_render()";
+bool Application_render(Application* app) {
+  const char* func_title = "Application_render()";
 
   if (!SDL_SetRenderDrawColor(app->renderer, 0x22, 0x80, 0x26, SDL_ALPHA_OPAQUE)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : %s", func_title, SDL_GetError());
@@ -171,18 +174,18 @@ bool application_render(application* app) {
 
 
 
-  if (!sprite_render(app->renderer, app->sprite_set[SPRITE_SET_PAD], true, true, true)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite_render() returned false", func_title);
+  if (!Sprite_render(app->renderer, app->sprite_set[SPRITE_SET_PAD], true)) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_render() returned false", func_title);
     return false;
   }
 
-  if (!sprite_render(app->renderer, app->sprite_set[SPRITE_SET_RPAD], true, true, true)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite_render() returned false", func_title);
+  if (!Sprite_render(app->renderer, app->sprite_set[SPRITE_SET_RPAD], true)) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_render() returned false", func_title);
     return false;
   }
 
-  if (!sprite_render(app->renderer, app->sprite_set[SPRITE_SET_BALL], true, true, true)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite_render() returned false", func_title);
+  if (!Sprite_render(app->renderer, app->sprite_set[SPRITE_SET_BALL], true)) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_render() returned false", func_title);
     return false;
   }
 
@@ -196,35 +199,35 @@ bool application_render(application* app) {
   return true;
 }
 
-bool application_main(application* app) {
-  const char* func_title = "application_main()";
+bool Application_main(Application* app) {
+  const char* func_title = "Application_main()";
 
   uint64_t end_time = 0;
   uint64_t start_time = SDL_GetTicks();
 
   while(app->running) {
-    application_input_handling(app);
+    Application_input_handling(app);
 
-    if (!application_event_handling(app)) {
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : application_event_handling() returned false", func_title);
+    if (!Application_event_handling(app)) {
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Application_event_handling() returned false", func_title);
       return false;
     }
 
-    if (!application_update_on_input(app)) {
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : application_event_handling() returned false", func_title);
+    if (!Application_update_on_input(app)) {
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Application_event_handling() returned false", func_title);
       return false;
     }
 
-    if (!application_update_on_events(app)) {
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : application_event_handling() returned false", func_title);
+    if (!Application_update_on_events(app)) {
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Application_event_handling() returned false", func_title);
       return false;
     }
 
-    if (!application_render(app)) {
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : application_render() returned false", func_title);
+    if (!Application_render(app)) {
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Application_render() returned false", func_title);
       return false;
     }
-
+    SDL_Delay(20);
     end_time = SDL_GetTicks();
     app->delta_time = end_time - start_time;
     start_time = SDL_GetTicks();

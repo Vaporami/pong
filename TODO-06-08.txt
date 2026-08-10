@@ -1,5 +1,0 @@
-!!! UNORDERED !!!
-///: Make centering functions, for both by_pivot and by_center;
-///: Refactor sprite and sprite_data so the pivot, center, and coords are the part of the sprite, rather than part of sprite_data. That means, sprite_data should contain only data about the exact used image, while sprite contains the way is rendered on the window.
-///: Respectively, refactor all movement, set and other functions so they also update the pivot and the center of the sprite.
-///: Consider moving onto structures like SDL_FPoint and SDL_FRect instead of relying on separate variables (even though it does increase the amount of boilerplate).

@@ -2,33 +2,25 @@
 
 #include "sprite_data.h"
 
+#include "box.h"
+
 #ifndef SPRITE_H
 #define SPRITE_H
 
-typedef struct sprite {
-  sprite_data* data;
-  SDL_FRect dest_rect;
-  SDL_FPoint pivot;
-  SDL_FPoint center;
-} sprite;
+typedef struct Sprite {
+  Sprite_data* data;
+  Box* box;
+} Sprite;
 
-sprite* sprite_new(sprite_data*, SDL_FRect*, SDL_FPoint*);
+Sprite* Sprite_new(Sprite_data*, Box*);
 
-bool sprite_render(SDL_Renderer*, sprite*, bool, bool, bool);
+bool Sprite_render(SDL_Renderer*, Sprite*, bool);
 
-// Used for single displacement
-bool sprite_move(sprite*, float, float);
+bool Sprite_move(Sprite*, float, float);
+bool Sprite_move_dt(Sprite*, float, float, uint64_t);
 
-// Used for continuous movement.
-// The given values are scaled by the given delta time.
-// Delta time - it's the time between the start of one tick and the start of the next one.
-bool sprite_move_dt(sprite*, float, float, uint64_t);
-
-bool sprite_set_x(sprite*, float);
-bool sprite_set_y(sprite*, float);
-bool sprite_set_xy(sprite*, float, float);
-
-bool sprite_center_by_pivot(sprite*, bool, bool, uint32_t, uint32_t);
-bool sprite_center_by_center(sprite*, bool, bool, uint32_t, uint32_t);
+bool Sprite_set_x(Sprite*, Fpoint*, float);
+bool Sprite_set_y(Sprite*, Fpoint*, float);
+bool Sprite_set_xy(Sprite*, Fpoint*, float, float);
 
 #endif

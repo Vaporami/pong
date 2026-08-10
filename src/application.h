@@ -6,7 +6,7 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
-typedef struct application {
+typedef struct Application {
   SDL_Window* window;
 
   int32_t width;
@@ -18,20 +18,20 @@ typedef struct application {
 
   bool must_update_on_input; 
 
-  // These two bools should be in a different "game" (or smth like that) struct
+  // These two bools should be in a separate "game" (or smth like that) struct
   bool must_move_pad_up;
   bool must_move_pad_down;
 
-  sprite_data** sprite_data_set;
-  sprite** sprite_set;
+  Sprite_data** sprite_data_set;
+  Sprite** sprite_set;
 
   uint64_t delta_time;
 
   bool running;
-} application;
+} Application;
 
-application* application_new(void);
-void application_destroy(application*);
-bool application_main(application*);
+Application* Application_new(void);
+void Application_destroy(Application*);
+bool Application_main(Application*);
 
 #endif

@@ -1,14 +1,17 @@
 #include <SDL3/SDL.h>
 
+#include "frect.h"
+#include "fpoint.h"
+
 #ifndef SPRITE_DATA_H
 #define SPRITE_DATA_H
 
-typedef struct sprite_data {
+typedef struct Sprite_data {
   SDL_Texture* texture;
-  SDL_FRect src_rect;
-} sprite_data;
+  Frect src_rect;
+} Sprite_data;
 
-sprite_data* sprite_data_new(SDL_Texture*, SDL_FRect*);
-sprite_data* sprite_data_new_from_bmp(SDL_Renderer*, const char*, SDL_FRect*);
+Sprite_data* Sprite_data_new(SDL_Texture*, Frect*);
+Sprite_data* Sprite_data_new_from_bmp(SDL_Renderer*, const char*, Frect*);
 
 #endif

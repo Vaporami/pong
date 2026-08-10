@@ -8,11 +8,11 @@ int main(void) {
     return 1;
   };
 
-  application* app = application_new();
+  Application* app = Application_new();
 
-  application_main(app);
+  Application_main(app);
 
-  application_destroy(app);
+  Application_destroy(app);
 
   SDL_Quit();
   return 0;

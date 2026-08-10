@@ -1,5 +1,6 @@
 data
 build
 TODO.txt
+*.txt
 cbuild.sh
 run.sh
