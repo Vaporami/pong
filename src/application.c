@@ -57,18 +57,20 @@ Application* Application_new(void) {
 
   Sprite** sprite_set = (Sprite**)malloc(3 * sizeof(Sprite*));
 
-  sprite_set[0] = Sprite_new(data_set[0], Box_new(NULL));
-  sprite_set[1] = Sprite_new(data_set[1], Box_new(NULL));
-  sprite_set[2] = Sprite_new(data_set[2], Box_new(NULL));
-
-  Sprite_set_y(sprite_set[SPRITE_SET_PAD],  &(sprite_set[SPRITE_SET_PAD]->box->center), (app->height / 2));
-  Sprite_set_y(sprite_set[SPRITE_SET_RPAD], &(sprite_set[SPRITE_SET_RPAD]->box->center), (app->height / 2));
-  Sprite_set_xy(sprite_set[SPRITE_SET_BALL], &(sprite_set[SPRITE_SET_BALL]->box->center), (app->width / 2), (app->height / 2));
-
-  Sprite_set_x(sprite_set[SPRITE_SET_PAD], &(sprite_set[SPRITE_SET_PAD]->box->center), 100.0f);
-  Sprite_set_x(sprite_set[SPRITE_SET_RPAD], &(sprite_set[SPRITE_SET_RPAD]->box->center), (float)app->width - 100.0f);
+  sprite_set[SPRITE_SET_PAD] = Sprite_new(data_set[0], Box_new(NULL));
+  sprite_set[SPRITE_SET_RPAD] = Sprite_new(data_set[1], Box_new(NULL));
+  sprite_set[SPRITE_SET_BALL] = Sprite_new(data_set[2], Box_new(NULL));
 
   app->sprite_set = sprite_set;
+
+  app->pad = Pad_new(sprite_set[SPRITE_SET_PAD], 500);
+  app->rpad = Pad_new(sprite_set[SPRITE_SET_RPAD], 500);
+  app->ball = Ball_new(sprite_set[SPRITE_SET_BALL], 250);
+
+  Pad_set_xy(app->pad, &(app->pad->box->center), 100.0f, (app->height / 2));
+  Pad_set_xy(app->rpad, &(app->rpad->box->center), (app->width - 100.0f), (app->height / 2));
+
+  Ball_set_xy(app->ball, &(app->ball->box->center), (app->width / 2), (app->height / 2));
 
   app->must_update_on_input  = false;
   app->must_move_pad_up      = false;
@@ -135,27 +137,29 @@ bool Application_event_handling(Application* app) {
 bool Application_update_on_input(Application* app) {
   const char* func_title = "Application_update_on_input()";
 
-  float speed = 500.0f;
-
   if (app->must_move_pad_up) {
-    if (!Sprite_move_dt(app->sprite_set[SPRITE_SET_PAD], 0, -speed, app->delta_time)) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_move returned false!", func_title);
+    if (!Pad_move_dt(app->pad, 0, -(app->pad->speed), app->delta_time)) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Pad_move_dt returned false!", func_title);
       return false;
     }
   }
 
   if (app->must_move_pad_down) {
-    if (!Sprite_move_dt(app->sprite_set[SPRITE_SET_PAD], 0, speed, app->delta_time)) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_move returned false!", func_title);
+    if (!Pad_move_dt(app->pad, 0, app->pad->speed, app->delta_time)) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Pad_move_dt returned false!", func_title);
       return false;
     }
   }
-
 
   return true;
 }
 
 bool Application_update_on_events(Application* app) {
+  return app->running;
+}
+
+bool Application_update(Application* app) {
+  Pad_set_y(app->rpad, &(app->rpad->box->center), app->pad->box->center.y);
   return app->running;
 }
 
@@ -174,17 +178,17 @@ bool Application_render(Application* app) {
 
 
 
-  if (!Sprite_render(app->renderer, app->sprite_set[SPRITE_SET_PAD], true)) {
+  if (!Pad_render(app->renderer, app->pad, true, true)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_render() returned false", func_title);
     return false;
   }
 
-  if (!Sprite_render(app->renderer, app->sprite_set[SPRITE_SET_RPAD], true)) {
+  if (!Pad_render(app->renderer, app->rpad, true, true)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_render() returned false", func_title);
     return false;
   }
 
-  if (!Sprite_render(app->renderer, app->sprite_set[SPRITE_SET_BALL], true)) {
+  if (!Ball_render(app->renderer, app->ball, true, true)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_render() returned false", func_title);
     return false;
   }
@@ -214,12 +218,17 @@ bool Application_main(Application* app) {
     }
 
     if (!Application_update_on_input(app)) {
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Application_event_handling() returned false", func_title);
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Application_update_on_input() returned false", func_title);
       return false;
     }
 
     if (!Application_update_on_events(app)) {
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Application_event_handling() returned false", func_title);
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Application_update_on_events() returned false", func_title);
+      return false;
+    }
+
+    if (!Application_update(app)) {
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Application_update() returned false", func_title);
       return false;
     }
 
@@ -227,7 +236,7 @@ bool Application_main(Application* app) {
       SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Application_render() returned false", func_title);
       return false;
     }
-    SDL_Delay(20);
+    SDL_Delay(8);
     end_time = SDL_GetTicks();
     app->delta_time = end_time - start_time;
     start_time = SDL_GetTicks();

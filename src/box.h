@@ -12,7 +12,9 @@ typedef struct Box {
 } Box;
 
 Box* Box_new(Frect*);
-void Box_destroy(Box*);
+bool Box_destroy(Box*);
+
+bool Box_render(SDL_Renderer*, Box*);
 
 bool Box_move(Box*, float, float);
 bool Box_move_dt(Box*, float, float, uint64_t);

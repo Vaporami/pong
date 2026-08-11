@@ -2,6 +2,8 @@
 
 #include "sprite_data.h"
 #include "sprite.h"
+#include "pad.h"
+#include "ball.h"
 
 #ifndef APPLICATION_H
 #define APPLICATION_H
@@ -24,6 +26,10 @@ typedef struct Application {
 
   Sprite_data** sprite_data_set;
   Sprite** sprite_set;
+
+  Pad* pad;
+  Pad* rpad;
+  Ball* ball;
 
   uint64_t delta_time;
 

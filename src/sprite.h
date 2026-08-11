@@ -13,6 +13,7 @@ typedef struct Sprite {
 } Sprite;
 
 Sprite* Sprite_new(Sprite_data*, Box*);
+bool Sprite_destroy(Sprite*);
 
 bool Sprite_render(SDL_Renderer*, Sprite*, bool);
 

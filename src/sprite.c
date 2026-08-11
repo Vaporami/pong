@@ -27,6 +27,22 @@ Sprite* Sprite_new(Sprite_data* init_data, Box* init_box) {
   return spr;
 }
 
+bool Sprite_destroy(Sprite* sprite) {
+  const char* func_title = "Sprite_destroy()";
+  
+  if (sprite == NULL) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : sprite appeared to be NULL!", func_title);
+    return false;
+  }
+
+  bool result = true; // 1 ; 0000 0001 ; 0 ; 0000 0000
+
+  result &= Sprite_data_destroy(sprite->data);
+  result &= Box_destroy(sprite->box);
+
+  return result;
+}
+
 bool Sprite_render(SDL_Renderer* renderer, Sprite* spr, bool render_box) {
   const char* func_title = "Sprite_render(SDL_Renderer*, sprite*)";
 
@@ -145,8 +161,7 @@ bool Sprite_set_xy(Sprite* spr, Fpoint* pivot, float new_x, float new_y) {
 
   bool result = true;
 
-  result &= Box_set_x(spr->box, pivot, new_x);
-  result &= Box_set_y(spr->box, pivot, new_y);
+  result &= Box_set_xy(spr->box, pivot, new_x, new_y);
 
   return result;
 }

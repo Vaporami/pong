@@ -13,5 +13,6 @@ typedef struct Sprite_data {
 
 Sprite_data* Sprite_data_new(SDL_Texture*, Frect*);
 Sprite_data* Sprite_data_new_from_bmp(SDL_Renderer*, const char*, Frect*);
+bool Sprite_data_destroy(Sprite_data*);
 
 #endif
