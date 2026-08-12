@@ -112,8 +112,14 @@ bool Pad_set_y(Pad* pad, Fpoint* pivot, float y) {
 
   bool result = true;
 
-  result &= Sprite_set_y(pad->sprite, pivot, y);
-  result &= Box_set_y(pad->box, pivot, y);
+  if (pivot == NULL) {
+    result &= Sprite_set_y(pad->sprite, NULL, y); // pivot == центр спрайта
+    result &= Box_set_y(pad->box, NULL, y); // pivot == центр спрайта
+  } else {
+    Fpoint pivot_copy = *pivot;
+    result &= Sprite_set_y(pad->sprite, &(pivot_copy), y); // pivot == центр спрайта
+    result &= Box_set_y(pad->box, &(pivot_copy), y); // pivot == центр спрайта
+  }
 
   return result;
 }
