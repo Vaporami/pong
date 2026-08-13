@@ -159,8 +159,8 @@ bool Application_update_on_events(Application* app) {
 }
 
 bool Application_update(Application* app) {
-  if (app->rpad->box->rect.y != app->pad->box->rect.y) {
-    Pad_set_y(app->rpad, &(app->rpad->sprite->box->center), app->pad->box->center.y);
+  if (app->rpad->box->rect.y != app->ball->box->rect.y) {
+    Pad_set_y(app->rpad, &(app->rpad->box->center), app->ball->box->center.y);
   }
   return true;
 }

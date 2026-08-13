@@ -62,46 +62,7 @@ bool Sprite_render(SDL_Renderer* renderer, Sprite* spr, bool render_box) {
   };
 
   if (render_box) {
-    uint8_t r = 0;
-    uint8_t g = 0;
-    uint8_t b = 0;
-    uint8_t a = 0;
-    
-    if (!SDL_GetRenderDrawColor(renderer, &r, &g, &b, &a)) {
-      SDL_LogError(SDL_LOG_CATEGORY_GPU, "%s : %s", func_title, SDL_GetError());
-      return false;
-    }
-    
-    if (!SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, SDL_ALPHA_OPAQUE)) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : %s", func_title, SDL_GetError());
-      return false;
-    }
-
-    if (!SDL_RenderRect(renderer, &(spr->box->rect))) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : %s", func_title, SDL_GetError());
-      return false;
-    }
-
-    Frect outline_center_rect = { .x = spr->box->center.x-1, .y = spr->box->center.y-1, .w = 3, .h = 3 };
-    if (!SDL_RenderRect(renderer, &outline_center_rect)) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : %s", func_title, SDL_GetError());
-      return false;
-    }
-
-    if (!SDL_SetRenderDrawColor(renderer, 0x00, 0xff, 0x00, SDL_ALPHA_OPAQUE)) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : %s", func_title, SDL_GetError());
-      return false;
-    }
-
-    if (!SDL_RenderPoint(renderer, spr->box->center.x, spr->box->center.y)) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : %s", func_title, SDL_GetError());
-      return false;
-    }
-
-    if (!SDL_SetRenderDrawColor(renderer, r, g, b, a)) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : %s", func_title, SDL_GetError());
-      return false;
-    }
+    Box_render(renderer, spr->box);
   }
 
   return true;

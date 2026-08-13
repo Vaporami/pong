@@ -65,16 +65,6 @@ bool Box_render(SDL_Renderer* renderer, Box* box) {
     return false;
   }
 
-  if (!SDL_SetRenderDrawColor(renderer, 0x00, 0xff, 0x00, SDL_ALPHA_OPAQUE)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : %s", func_title, SDL_GetError());
-    return false;
-  }
-
-  if (!SDL_RenderPoint(renderer, box->center.x, box->center.y)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : %s", func_title, SDL_GetError());
-    return false;
-  }
-
   if (!SDL_SetRenderDrawColor(renderer, r, g, b, a)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : %s", func_title, SDL_GetError());
     return false;
