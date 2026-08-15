@@ -70,7 +70,7 @@ Application* Application_new(void) {
   Vector rpad_speed = { .x = 0.0f, .y = 500.0f };
   app->rpad = Pad_new(sprite_set[SPRITE_SET_RPAD], rpad_speed);
 
-  Vector ball_speed = { .x = 250.0f, .y = 150.0f };
+  Vector ball_speed = { .x = 550.0f, .y = 450.0f };
   app->ball = Ball_new(sprite_set[SPRITE_SET_BALL], ball_speed);
 
   Vector pad_init_pos = { .x = 100.0f, .y = app->height / 2 };
@@ -227,22 +227,28 @@ bool Application_Ball_react_to_collisions(Application* app) {
   bool ball_touch_rpad   = ball_touch_rpad_x && ball_touch_rpad_y;
 
   bool ball_touch_win_ceiling = ball_upper_center.y <= 0;
-  bool ball_touch_win_floor   = ball_upper_center.y >= app->height;
+  bool ball_touch_win_floor   = ball_lower_center.y >= app->height;
 
-  if (ball_touch_pad) {
+  if (ball_touch_pad && app->ball->speed.x < 0) {
+    app->ball->speed.x *= -1;
   }
 
-  if (ball_touch_rpad) {
+  if (ball_touch_rpad && app->ball->speed.x > 0) {
+    app->ball->speed.x *= -1;
   }
 
-  if (ball_touch_win_ceiling) {
+  if (ball_touch_win_ceiling && app->ball->speed.y < 0) {
+    app->ball->speed.y *= -1;
   }
 
-  if (ball_touch_win_floor) {
+  if (ball_touch_win_floor && app->ball->speed.y > 0) {
+    app->ball->speed.y *= -1;
   }
 }
 
 bool Application_update(Application* app) {
+  Application_Ball_react_to_collisions(app);
+  Ball_move_dt(app->ball, app->ball->speed, app->delta_time);
 
   if (app->rpad->box->rect.y != app->ball->box->rect.y) {
     Pad_set_y(app->rpad, &(app->rpad->box->center), app->ball->box->center.y);

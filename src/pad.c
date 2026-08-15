@@ -16,15 +16,7 @@ Pad* Pad_new(Sprite* init_sprite, Vector init_speed) {
 
   pad->sprite            = init_sprite;
   pad->box               = Box_new(&(init_sprite->box->rect));
-  pad->speed             = init_speed;
-
-  if (!Vector_normalize(&init_speed)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Vector_normalize() returned false!", func_title);
-    return NULL;
-  }
-
-  pad->speed.x *= init_speed.x;
-  pad->speed.y *= init_speed.y;
+  pad->speed             = Vector_new_speed(init_speed);
 
   return pad;
 }

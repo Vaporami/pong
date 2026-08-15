@@ -17,15 +17,7 @@ Ball* Ball_new(Sprite* init_sprite, Vector init_speed) {
 
   ball->sprite   = init_sprite;
   ball->box      = Box_new(&(init_sprite->box->rect));
-  ball->speed    = init_speed;
-
-  if (!Vector_normalize(&init_speed)) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Vector_normalize() returned false!", func_title);
-    return NULL;
-  }
-
-  ball->speed.x *= init_speed.x;
-  ball->speed.y *= init_speed.y;
+  ball->speed    = Vector_new_speed(init_speed);
 
   return ball;
 }

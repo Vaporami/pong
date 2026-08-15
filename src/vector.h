@@ -4,11 +4,13 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-typedef struct Vector {
-  float x;
-  float y;
-} Vector;
+// typedef struct Vector {
+//   float x;
+//   float y;
+// } Vector;
 
-bool Vector_normalize(Vector* vector); 
+typedef SDL_FPoint Vector;
+
+Vector Vector_new_speed(Vector); 
 
 #endif

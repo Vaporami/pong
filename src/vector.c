@@ -1,17 +1,19 @@
+#include <math.h>
+
 #include "vector.h"
 
-bool Vector_normalize(Vector* vector) {
-  const char* func_title = "Vector_normalize()";
-
-  if (vector == NULL) {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : vector appeared to be NULL!", func_title);
-    return false;
+Vector Vector_new_speed(Vector vector) {
+  float hypot = sqrtf(vector.x * vector.x + vector.y * vector.y);
+  Vector speed = {
+    .x = vector.x * vector.x / hypot,
+    .y = vector.y * vector.y / hypot
+  };
+  if (vector.x < 0 && speed.x > 0) {
+    speed.x *= -1;
   }
-
-  float hypot = sqrtf(vector->x * vector->x + vector->y * vector->y);
-
-  vector->x /= hypot;
-  vector->y /= hypot;
-
-  return true;
+  if (vector.y < 0 && speed.y > 0) {
+    speed.y *= -1;
+  }
+  SDL_Log("I was here!");
+  return speed;
 }
