@@ -68,7 +68,7 @@ bool Sprite_render(SDL_Renderer* renderer, Sprite* spr, bool render_box) {
   return true;
 }
 
-bool Sprite_move(Sprite* spr, float x, float y) {
+bool Sprite_move(Sprite* spr, Vector diff) {
   const char* func_title = "Sprite_move()";
 
   if (spr == NULL) {
@@ -76,10 +76,10 @@ bool Sprite_move(Sprite* spr, float x, float y) {
     return false;
   }
 
-  return Box_move(spr->box, x, y);
+  return Box_move(spr->box, diff);
 }
 
-bool Sprite_move_dt(Sprite* spr, float x_per_second, float y_per_second, uint64_t delta_time) {
+bool Sprite_move_dt(Sprite* spr, Vector speed, uint64_t delta_time) {
   const char* func_title = "Sprite_move_dt()";
 
   if (spr == NULL) {
@@ -87,7 +87,7 @@ bool Sprite_move_dt(Sprite* spr, float x_per_second, float y_per_second, uint64_
     return false;
   }
 
-  return Box_move_dt(spr->box, x_per_second, y_per_second, delta_time);
+  return Box_move_dt(spr->box, speed, delta_time);
 }
 
 bool Sprite_set_x(Sprite* spr, Fpoint* pivot, float new_x) {
@@ -112,7 +112,7 @@ bool Sprite_set_y(Sprite* spr, Fpoint* pivot, float new_y) {
   return Box_set_y(spr->box, pivot, new_y);
 }
 
-bool Sprite_set_xy(Sprite* spr, Fpoint* pivot, float new_x, float new_y) {
+bool Sprite_set_xy(Sprite* spr, Fpoint* pivot, Vector position) {
   const char* func_title = "Sprite_set_xy()";
 
   if (spr == NULL) {
@@ -122,7 +122,7 @@ bool Sprite_set_xy(Sprite* spr, Fpoint* pivot, float new_x, float new_y) {
 
   bool result = true;
 
-  result &= Box_set_xy(spr->box, pivot, new_x, new_y);
+  result &= Box_set_xy(spr->box, pivot, position);
 
   return result;
 }

@@ -1,6 +1,6 @@
 root_dir=~/programming/c/sdl/pong/;
 compiler="clang";
-libs="-lSDL3";
+libs="-lSDL3 -lm";
 clang_flags="-fcolor-diagnostics";
 flags="-g -pedantic-errors -Wall -Wextra";
 srcs="${root_dir}src/*.c";

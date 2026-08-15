@@ -6,6 +6,7 @@
 #include "application.h"
 #include "sprite_data.h"
 #include "sprite.h"
+#include "vector.h"
 
 #define SPRITE_SET_PAD 0
 #define SPRITE_SET_RPAD 1
@@ -63,14 +64,23 @@ Application* Application_new(void) {
 
   app->sprite_set = sprite_set;
 
-  app->pad = Pad_new(sprite_set[SPRITE_SET_PAD], 500);
-  app->rpad = Pad_new(sprite_set[SPRITE_SET_RPAD], 500);
-  app->ball = Ball_new(sprite_set[SPRITE_SET_BALL], 250);
+  Vector pad_speed = { .x = 0.0f, .y = 500.0f };
+  app->pad = Pad_new(sprite_set[SPRITE_SET_PAD], pad_speed);
 
-  Pad_set_xy(app->pad, &(app->pad->box->center), 100.0f, (app->height / 2));
-  Pad_set_xy(app->rpad, &(app->rpad->box->center), (app->width - 100.0f), (app->height / 2));
+  Vector rpad_speed = { .x = 0.0f, .y = 500.0f };
+  app->rpad = Pad_new(sprite_set[SPRITE_SET_RPAD], rpad_speed);
 
-  Ball_set_xy(app->ball, &(app->ball->box->center), (app->width / 2), (app->height / 2));
+  Vector ball_speed = { .x = 250.0f, .y = 150.0f };
+  app->ball = Ball_new(sprite_set[SPRITE_SET_BALL], ball_speed);
+
+  Vector pad_init_pos = { .x = 100.0f, .y = app->height / 2 };
+  Pad_set_xy(app->pad, &(app->pad->box->center), pad_init_pos);
+
+  Vector rpad_init_pos = { .x = app->width - 100.0f, .y = app->height / 2 };
+  Pad_set_xy(app->rpad, &(app->rpad->box->center), rpad_init_pos);
+
+  Vector ball_init_pos = { .x = app->width / 2, .y = app->height / 2 };
+  Ball_set_xy(app->ball, &(app->ball->box->center), ball_init_pos);
 
   app->must_update_on_input  = false;
   app->must_move_pad_up      = false;
@@ -138,14 +148,16 @@ bool Application_update_on_input(Application* app) {
   const char* func_title = "Application_update_on_input()";
 
   if (app->must_move_pad_up) {
-    if (!Pad_move_dt(app->pad, 0, -(app->pad->speed), app->delta_time)) {
+    app->pad->speed = (Vector){ .x = 0.0f, .y = -500.0f };
+    if (!Pad_move_dt(app->pad, app->pad->speed, app->delta_time)) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Pad_move_dt returned false!", func_title);
       return false;
     }
   }
 
   if (app->must_move_pad_down) {
-    if (!Pad_move_dt(app->pad, 0, app->pad->speed, app->delta_time)) {
+    app->pad->speed = (Vector){ .x = 0.0f, .y = 500.0f };
+    if (!Pad_move_dt(app->pad, app->pad->speed, app->delta_time)) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Pad_move_dt returned false!", func_title);
       return false;
     }
@@ -158,10 +170,84 @@ bool Application_update_on_events(Application* app) {
   return app->running;
 }
 
+bool Application_Ball_react_to_collisions(Application* app) {
+  const char* func_title = "Application_Ball_move()";
+
+  if (app == NULL) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : app appeared to be NULL!", func_title);
+    return false;
+  }
+
+  Fpoint ball_left_center = {
+    .x = app->ball->box->rect.x,
+    .y = app->ball->box->rect.y + (app->ball->box->rect.h / 2)
+  };
+
+  Fpoint ball_right_center = {
+    .x = app->ball->box->rect.x + app->ball->box->rect.w,
+    .y = app->ball->box->rect.y + (app->ball->box->rect.h / 2)
+  };
+
+  Fpoint ball_upper_center = {
+    .x = app->ball->box->rect.x + (app->ball->box->rect.w / 2),
+    .y = app->ball->box->rect.y
+  };
+
+  Fpoint ball_lower_center = {
+    .x = app->ball->box->rect.x + (app->ball->box->rect.w / 2),
+    .y = app->ball->box->rect.y + app->ball->box->rect.h
+  };
+
+  Fpoint pad_right_upper_corner = {
+    .x = app->pad->box->rect.x + app->pad->box->rect.w,
+    .y = app->pad->box->rect.y
+  };
+
+  Fpoint pad_right_lower_corner = {
+    .x = app->pad->box->rect.x + app->pad->box->rect.w,
+    .y = app->pad->box->rect.y + app->pad->box->rect.h
+  };
+
+  Fpoint rpad_left_upper_corner = {
+    .x = app->rpad->box->rect.x,
+    .y = app->rpad->box->rect.y
+  };
+
+  Fpoint rpad_left_lower_corner = {
+    .x = app->rpad->box->rect.x,
+    .y = app->rpad->box->rect.y + app->pad->box->rect.h
+  };
+
+  bool ball_touch_pad_x = ball_left_center.x <= pad_right_upper_corner.x;
+  bool ball_touch_pad_y = pad_right_upper_corner.y < ball_left_center.y && ball_left_center.y < pad_right_lower_corner.y;
+  bool ball_touch_pad   = ball_touch_pad_x && ball_touch_pad_y;
+
+  bool ball_touch_rpad_x = ball_right_center.x >= rpad_left_upper_corner.x;
+  bool ball_touch_rpad_y = rpad_left_upper_corner.y < ball_right_center.y && ball_right_center.y < rpad_left_lower_corner.y;
+  bool ball_touch_rpad   = ball_touch_rpad_x && ball_touch_rpad_y;
+
+  bool ball_touch_win_ceiling = ball_upper_center.y <= 0;
+  bool ball_touch_win_floor   = ball_upper_center.y >= app->height;
+
+  if (ball_touch_pad) {
+  }
+
+  if (ball_touch_rpad) {
+  }
+
+  if (ball_touch_win_ceiling) {
+  }
+
+  if (ball_touch_win_floor) {
+  }
+}
+
 bool Application_update(Application* app) {
+
   if (app->rpad->box->rect.y != app->ball->box->rect.y) {
     Pad_set_y(app->rpad, &(app->rpad->box->center), app->ball->box->center.y);
   }
+
   return true;
 }
 

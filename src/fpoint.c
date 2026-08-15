@@ -2,7 +2,7 @@
 
 #include "fpoint.h"
 
-bool Fpoint_move(Fpoint* fpoint, float x, float y) {
+bool Fpoint_move(Fpoint* fpoint, Vector diff) {
   const char* func_title = "Fpoint_move()";
 
   if (fpoint == NULL) {
@@ -10,13 +10,13 @@ bool Fpoint_move(Fpoint* fpoint, float x, float y) {
     return false;
   }
 
-  fpoint->x += x;
-  fpoint->y += y;
+  fpoint->x += diff.x;
+  fpoint->y += diff.y;
   
   return true;
 }
 
-bool Fpoint_move_dt(Fpoint* fpoint, float x_per_second, float y_per_second, uint64_t delta_time) {
+bool Fpoint_move_dt(Fpoint* fpoint, Vector speed, uint64_t delta_time) {
   const char* func_title = "Fpoint_move_dt()";
 
   if (fpoint == NULL) {
@@ -26,8 +26,8 @@ bool Fpoint_move_dt(Fpoint* fpoint, float x_per_second, float y_per_second, uint
 
   float delta_time_seconds = (float)delta_time / 1000.0f;
 
-  fpoint->x += x_per_second * delta_time_seconds;
-  fpoint->y += y_per_second * delta_time_seconds;
+  fpoint->x += speed.x * delta_time_seconds;
+  fpoint->y += speed.y * delta_time_seconds;
   
   return true;
 }
@@ -44,7 +44,8 @@ bool Fpoint_set_x(Fpoint* fpoint, Fpoint* pivot, float x) {
     fpoint->x = x;
   } else {
     float diff = x - pivot->x;
-    Fpoint_move(fpoint, diff, 0);
+    Vector vdiff = { .x = diff, .y = 0.0f };
+    Fpoint_move(fpoint, vdiff);
   }
 
   return true;
@@ -62,13 +63,14 @@ bool Fpoint_set_y(Fpoint* fpoint, Fpoint* pivot, float y) {
     fpoint->y = y;
   } else {
     float diff = y - pivot->y;
-    Fpoint_move(fpoint, 0, diff);
+    Vector vdiff = { .x = 0.0f, .y = diff };
+    Fpoint_move(fpoint, vdiff);
   }
   
   return true;
 }
 
-bool Fpoint_set_xy(Fpoint* fpoint, Fpoint* pivot, float x, float y) {
+bool Fpoint_set_xy(Fpoint* fpoint, Fpoint* pivot, Vector position) {
   const char* func_title = "fpoint_set_xy()";
 
   if (fpoint == NULL) {
@@ -77,13 +79,12 @@ bool Fpoint_set_xy(Fpoint* fpoint, Fpoint* pivot, float x, float y) {
   }
 
   if (pivot == NULL) {
-    fpoint->x = x;
-    fpoint->y = y;
+    fpoint->x = position.x;
+    fpoint->y = position.y;
   } else {
-    float diff_x = x - pivot->x;
-    float diff_y = y - pivot->y;
-    Fpoint_move(fpoint, diff_x, diff_y);
+    Vector vdiff = { .x = position.x - pivot->x, .y = position.y - pivot->y };
+    Fpoint_move(fpoint, vdiff);
   }
 
-  return true;;
+  return true;
 }

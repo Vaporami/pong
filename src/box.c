@@ -73,7 +73,7 @@ bool Box_render(SDL_Renderer* renderer, Box* box) {
   return true;
 }
 
-bool Box_move(Box* box, float x, float y) {
+bool Box_move(Box* box, Vector diff) {
   const char* func_title = "Box_move()";
 
   if (box == NULL) {
@@ -81,13 +81,13 @@ bool Box_move(Box* box, float x, float y) {
     return false;
   }
 
-  Frect_move(&(box->rect), x, y);
-  Fpoint_move(&(box->center), x, y);
+  Frect_move(&(box->rect), diff);
+  Fpoint_move(&(box->center), diff);
 
   return true;
 }
 
-bool Box_move_dt(Box* box, float x_per_second, float y_per_second, uint64_t delta_time) {
+bool Box_move_dt(Box* box, Vector speed, uint64_t delta_time) {
   const char* func_title = "Box_move_dt()";
 
   if (box == NULL) {
@@ -95,8 +95,8 @@ bool Box_move_dt(Box* box, float x_per_second, float y_per_second, uint64_t delt
     return false;
   }
 
-  Frect_move_dt(&(box->rect), x_per_second, y_per_second, delta_time);
-  Fpoint_move_dt(&(box->center), x_per_second, y_per_second, delta_time);
+  Frect_move_dt(&(box->rect), speed, delta_time);
+  Fpoint_move_dt(&(box->center), speed, delta_time);
 
   return true;
 }
@@ -113,10 +113,12 @@ bool Box_set_x(Box* box, Fpoint* pivot, float x) {
 
   if (pivot == NULL) {
     float diff = x - box->rect.x;
-    result &= Box_move(box, diff, 0);
+    Vector vdiff = { .x = diff, .y = 0.0f };
+    result &= Box_move(box, vdiff);
   } else {
     float diff = x - pivot->x;
-    result &= Box_move(box, diff, 0);
+    Vector vdiff = { .x = diff, .y = 0.0f };
+    result &= Box_move(box, vdiff);
   }
 
   return result;
@@ -134,16 +136,18 @@ bool Box_set_y(Box* box, Fpoint* pivot, float y) {
 
   if (pivot == NULL) {
     float diff = y - box->rect.y;
-    result &= Box_move(box, 0, diff);
+    Vector vdiff = { .x = 0.0f, .y = diff };
+    result &= Box_move(box, vdiff);
   } else {
     float diff = y - pivot->y;
-    result &= Box_move(box, 0, diff);
+    Vector vdiff = { .x = 0.0f, .y = diff };
+    result &= Box_move(box, vdiff);
   }
 
   return result;
 }
 
-bool Box_set_xy(Box* box, Fpoint* pivot, float x, float y) {
+bool Box_set_xy(Box* box, Fpoint* pivot, Vector position) {
   const char* func_title = "Box_set_xy()";
 
   if (box == NULL) {
@@ -153,18 +157,8 @@ bool Box_set_xy(Box* box, Fpoint* pivot, float x, float y) {
 
   bool result = true;
 
-  // if (pivot == NULL) {
-  //   float diff_x = x - box->rect.x;
-  //   float diff_y = y - box->rect.y;
-  //   result &= Box_move(box, diff_x, diff_y);
-  // } else {
-  //   float diff_x = x - pivot->x;
-  //   float diff_y = y - pivot->y;
-  //   result &= Box_move(box, diff_x, diff_y);
-  // }
-
-  result &= Box_set_x(box, pivot, x);
-  result &= Box_set_y(box, pivot, y);
+  result &= Box_set_x(box, pivot, position.x);
+  result &= Box_set_y(box, pivot, position.y);
 
   return result;
 }
