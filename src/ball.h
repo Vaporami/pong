@@ -8,9 +8,13 @@ typedef struct Ball {
 
   Box* box;
 
-  Vector speed;
+  Vector raw_velocity;
+  Vector velocity;
+
+  uint32_t bounces;
 } Ball;
 
+bool Ball_apply_velocity(Ball*, Vector);
 Ball* Ball_new(Sprite*, Vector);
 bool Ball_destroy(Ball*);
 

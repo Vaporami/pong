@@ -5,7 +5,21 @@
 
 #include "ball.h"
 
-Ball* Ball_new(Sprite* init_sprite, Vector init_speed) {
+bool Ball_apply_velocity(Ball* ball, Vector raw_velocity) {
+  const char* func_title = "Ball_apply_velocity()";
+
+  if (ball == NULL) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : ball appeared to be NULL!", func_title);
+    return NULL;
+  }
+
+  ball->raw_velocity  = raw_velocity;
+  ball->velocity      = Vector_new_velocity(raw_velocity);
+
+  return true;
+}
+
+Ball* Ball_new(Sprite* init_sprite, Vector init_raw_velocity) {
   const char* func_title = "Ball_new()";
 
   if (init_sprite == NULL) {
@@ -15,9 +29,15 @@ Ball* Ball_new(Sprite* init_sprite, Vector init_speed) {
 
   Ball* ball = (Ball*)malloc(sizeof(Ball));
 
-  ball->sprite   = init_sprite;
-  ball->box      = Box_new(&(init_sprite->box->rect));
-  ball->speed    = Vector_new_speed(init_speed);
+  ball->sprite  = init_sprite;
+  ball->box     = Box_new(&(init_sprite->box->rect));
+
+  if (!Ball_apply_velocity(ball, init_raw_velocity)) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Ball_apply_velocity() returned false!", func_title);
+    return NULL;
+  }
+
+  ball->bounces = 0;
 
   return ball;
 }

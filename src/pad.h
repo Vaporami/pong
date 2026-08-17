@@ -7,9 +7,11 @@ typedef struct Pad {
   Sprite* sprite;
   Box* box;
 
-  Vector speed;
+  Vector raw_velocity;
+  Vector velocity;
 } Pad;
 
+bool Pad_apply_velocity(Pad*, Vector);
 Pad* Pad_new(Sprite*, Vector);
 bool Pad_destroy(Pad*);
 

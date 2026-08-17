@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include <SDL3/SDL.h>
 
@@ -11,6 +12,9 @@
 #define SPRITE_SET_PAD 0
 #define SPRITE_SET_RPAD 1
 #define SPRITE_SET_BALL 2
+
+#define PIF SDL_PI_F
+#define PID SDL_PI_D
 
 Application* Application_new(void) {
   const char* func_title = "Application_new()";
@@ -64,13 +68,13 @@ Application* Application_new(void) {
 
   app->sprite_set = sprite_set;
 
-  Vector pad_speed = { .x = 0.0f, .y = 500.0f };
+  Vector pad_speed = { .x = 0.0f, .y = 0.0f };
   app->pad = Pad_new(sprite_set[SPRITE_SET_PAD], pad_speed);
 
-  Vector rpad_speed = { .x = 0.0f, .y = 500.0f };
+  Vector rpad_speed = { .x = 0.0f, .y = 0.0f };
   app->rpad = Pad_new(sprite_set[SPRITE_SET_RPAD], rpad_speed);
 
-  Vector ball_speed = { .x = 550.0f, .y = 450.0f };
+  Vector ball_speed = { .x = -300.0f, .y = 0.0f };
   app->ball = Ball_new(sprite_set[SPRITE_SET_BALL], ball_speed);
 
   Vector pad_init_pos = { .x = 100.0f, .y = app->height / 2 };
@@ -96,10 +100,10 @@ Application* Application_new(void) {
 }
 
 void Application_destroy(Application* app) {
-  for (int i = 0; i < 3; i++) {
-    free(app->sprite_set[i]);
-    free(app->sprite_data_set[i]);
-  }
+  Pad_destroy(app->pad);
+  Pad_destroy(app->rpad);
+  Ball_destroy(app->ball);
+
   SDL_DestroyRenderer(app->renderer);
   SDL_DestroyWindow(app->window);
 }
@@ -129,7 +133,6 @@ bool Application_close(Application* app) {
 }
 
 bool Application_event_handling(Application* app) {
-
   SDL_Event event;
   while(SDL_PollEvent(&event)) {
     if (event.type == SDL_EVENT_QUIT) {
@@ -147,17 +150,21 @@ bool Application_event_handling(Application* app) {
 bool Application_update_on_input(Application* app) {
   const char* func_title = "Application_update_on_input()";
 
+  float pad_intended_raw_velocity_y = 500.0f;
+
   if (app->must_move_pad_up) {
-    app->pad->speed = (Vector){ .x = 0.0f, .y = -500.0f };
-    if (!Pad_move_dt(app->pad, app->pad->speed, app->delta_time)) {
+    Vector new_raw_velocity = { .x = 0.0f, .y = -1.0f * pad_intended_raw_velocity_y };
+    Pad_apply_velocity(app->pad, new_raw_velocity);
+    if (!Pad_move_dt(app->pad, app->pad->velocity, app->delta_time)) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Pad_move_dt returned false!", func_title);
       return false;
     }
   }
 
   if (app->must_move_pad_down) {
-    app->pad->speed = (Vector){ .x = 0.0f, .y = 500.0f };
-    if (!Pad_move_dt(app->pad, app->pad->speed, app->delta_time)) {
+    Vector new_raw_velocity = { .x = 0.0f, .y = pad_intended_raw_velocity_y };
+    Pad_apply_velocity(app->pad, new_raw_velocity);
+    if (!Pad_move_dt(app->pad, app->pad->velocity, app->delta_time)) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Pad_move_dt returned false!", func_title);
       return false;
     }
@@ -171,7 +178,7 @@ bool Application_update_on_events(Application* app) {
 }
 
 bool Application_Ball_react_to_collisions(Application* app) {
-  const char* func_title = "Application_Ball_move()";
+  const char* func_title = "Application_Ball_react_to_collisions()";
 
   if (app == NULL) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : app appeared to be NULL!", func_title);
@@ -208,6 +215,11 @@ bool Application_Ball_react_to_collisions(Application* app) {
     .y = app->pad->box->rect.y + app->pad->box->rect.h
   };
 
+  Fpoint pad_right_center = {
+    .x = pad_right_upper_corner.x,
+    .y = pad_right_upper_corner.y + (app->pad->box->rect.h / 2)
+  };
+
   Fpoint rpad_left_upper_corner = {
     .x = app->rpad->box->rect.x,
     .y = app->rpad->box->rect.y
@@ -216,6 +228,11 @@ bool Application_Ball_react_to_collisions(Application* app) {
   Fpoint rpad_left_lower_corner = {
     .x = app->rpad->box->rect.x,
     .y = app->rpad->box->rect.y + app->pad->box->rect.h
+  };
+
+  Fpoint rpad_left_center = {
+    .x = rpad_left_upper_corner.x,
+    .y = rpad_left_upper_corner.y + (app->rpad->box->rect.h / 2)
   };
 
   bool ball_touch_pad_x = ball_left_center.x <= pad_right_upper_corner.x;
@@ -229,30 +246,62 @@ bool Application_Ball_react_to_collisions(Application* app) {
   bool ball_touch_win_ceiling = ball_upper_center.y <= 0;
   bool ball_touch_win_floor   = ball_lower_center.y >= app->height;
 
-  if (ball_touch_pad && app->ball->speed.x < 0) {
-    app->ball->speed.x *= -1;
+  float coeff = 1.25f;
+  float applying_coeff = coeff + (app->ball->bounces * 0.25f);
+  float angle_coeff = 10.0f;
+  if (applying_coeff > 3) applying_coeff = 3;
+  if (ball_touch_pad && app->ball->raw_velocity.x < 0) {
+    Vector v = {
+      .x = 300 * applying_coeff,
+      .y = (ball_left_center.y - pad_right_center.y) * angle_coeff * applying_coeff
+    };
+
+    Ball_apply_velocity(app->ball, v);
+    app->ball->bounces++;
+    SDL_Log("applying_coeff = %f", applying_coeff);
   }
 
-  if (ball_touch_rpad && app->ball->speed.x > 0) {
-    app->ball->speed.x *= -1;
+  if (ball_touch_rpad && app->ball->raw_velocity.x > 0) {
+    Vector v = {
+      .x = -300 * applying_coeff,
+      .y = (ball_right_center.y - rpad_left_center.y) * angle_coeff * applying_coeff
+    };
+
+    Ball_apply_velocity(app->ball, v);
+    app->ball->bounces++;
+    SDL_Log("applying_coeff = %f", applying_coeff);
   }
 
-  if (ball_touch_win_ceiling && app->ball->speed.y < 0) {
-    app->ball->speed.y *= -1;
+  if (ball_touch_win_ceiling) {
+    Vector v = {
+      .x = app->ball->raw_velocity.x,
+      .y = fabsf(app->ball->raw_velocity.y)
+    };
+
+    Ball_apply_velocity(app->ball, v);
   }
 
-  if (ball_touch_win_floor && app->ball->speed.y > 0) {
-    app->ball->speed.y *= -1;
+  if (ball_touch_win_floor) {
+    Vector v = {
+      .x = app->ball->raw_velocity.x,
+      .y = -1 * fabsf(app->ball->raw_velocity.y)
+    };
+
+    Ball_apply_velocity(app->ball, v);
   }
 }
 
 bool Application_update(Application* app) {
   Application_Ball_react_to_collisions(app);
-  Ball_move_dt(app->ball, app->ball->speed, app->delta_time);
+  Ball_move_dt(app->ball, app->ball->velocity, app->delta_time);
 
-  if (app->rpad->box->rect.y != app->ball->box->rect.y) {
-    Pad_set_y(app->rpad, &(app->rpad->box->center), app->ball->box->center.y);
+  Vector rpad_raw_velocity = { .x = 0.0f, .y = 200.0f };
+  float ball_rpad_diff_y = app->ball->box->center.y - app->rpad->box->center.y;
+  if (ball_rpad_diff_y < 0) {
+    rpad_raw_velocity.y *= -1;
   }
+  Pad_apply_velocity(app->rpad, rpad_raw_velocity); 
+  Pad_move_dt(app->rpad, app->rpad->velocity, app->delta_time);
 
   return true;
 }
@@ -272,17 +321,17 @@ bool Application_render(Application* app) {
 
 
 
-  if (!Pad_render(app->renderer, app->pad, true, true)) {
+  if (!Pad_render(app->renderer, app->pad, false, false)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_render() returned false", func_title);
     return false;
   }
 
-  if (!Pad_render(app->renderer, app->rpad, true, true)) {
+  if (!Pad_render(app->renderer, app->rpad, false, false)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_render() returned false", func_title);
     return false;
   }
 
-  if (!Ball_render(app->renderer, app->ball, true, true)) {
+  if (!Ball_render(app->renderer, app->ball, false, false)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_render() returned false", func_title);
     return false;
   }
@@ -330,7 +379,7 @@ bool Application_main(Application* app) {
       SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Application_render() returned false", func_title);
       return false;
     }
-    SDL_Delay(8);
+    SDL_Delay(4);
     end_time = SDL_GetTicks();
     app->delta_time = end_time - start_time;
     start_time = SDL_GetTicks();

@@ -4,7 +4,21 @@
 
 #include "pad.h"
 
-Pad* Pad_new(Sprite* init_sprite, Vector init_speed) {
+bool Pad_apply_velocity(Pad* pad, Vector raw_velocity) {
+  const char* func_title = "Pad_apply_velocity()";
+
+  if (pad == NULL) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : ball appeared to be NULL!", func_title);
+    return NULL;
+  }
+
+  pad->raw_velocity  = raw_velocity;
+  pad->velocity      = Vector_new_velocity(raw_velocity);
+
+  return true;
+}
+
+Pad* Pad_new(Sprite* init_sprite, Vector init_raw_velocity) {
   const char* func_title = "Pad_new()";
 
   if (init_sprite == NULL) {
@@ -14,9 +28,13 @@ Pad* Pad_new(Sprite* init_sprite, Vector init_speed) {
 
   Pad* pad = (Pad*)malloc(sizeof(Pad));
 
-  pad->sprite            = init_sprite;
-  pad->box               = Box_new(&(init_sprite->box->rect));
-  pad->speed             = Vector_new_speed(init_speed);
+  pad->sprite        = init_sprite;
+  pad->box           = Box_new(&(init_sprite->box->rect));
+
+  if (!Pad_apply_velocity(pad, init_raw_velocity)) {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Pad_apply_velocity() returned false!", func_title);
+    return NULL;
+  }
 
   return pad;
 }

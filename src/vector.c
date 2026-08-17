@@ -2,18 +2,43 @@
 
 #include "vector.h"
 
-Vector Vector_new_speed(Vector vector) {
-  float hypot = sqrtf(vector.x * vector.x + vector.y * vector.y);
-  Vector speed = {
-    .x = vector.x * vector.x / hypot,
-    .y = vector.y * vector.y / hypot
+Vector Vector_new_velocity(Vector raw_velocity) {
+  float hypot = hypotf(raw_velocity.x, raw_velocity.y);
+
+  Vector velocity = {
+    .x = raw_velocity.x * fabsf(raw_velocity.x) / hypot,
+    .y = raw_velocity.y * fabsf(raw_velocity.y) / hypot
   };
-  if (vector.x < 0 && speed.x > 0) {
-    speed.x *= -1;
-  }
-  if (vector.y < 0 && speed.y > 0) {
-    speed.y *= -1;
-  }
-  SDL_Log("I was here!");
-  return speed;
+
+  return velocity;
+}
+
+float Vector_get_length(Vector v) {
+  return hypotf(v.x, v.y);
+}
+
+float Vector_dot_product(Vector v1, Vector v2) {
+  return v1.x * v2.x + v1.y * v2.y;
+} 
+
+float Vector_get_cos(Vector v1, Vector v2) {
+  return Vector_dot_product(v1, v2) / (fabsf(Vector_get_length(v1)) * fabsf(Vector_get_length(v2)));
+} 
+
+float Vector_get_angle(Vector v1, Vector v2) {
+  return acosf(Vector_get_cos(v1, v2));
+} 
+
+Vector Vector_abs(Vector v) {
+  return (Vector){ .x = fabsf(v.x), .y = fabsf(v.y) };
+}
+
+Vector Vector_only_x(Vector v) {
+  v.y = 0;
+  return v;
+}
+
+Vector Vector_only_y(Vector v) {
+  v.x = 0;
+  return v;
 }

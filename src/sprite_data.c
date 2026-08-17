@@ -51,7 +51,6 @@ bool Sprite_data_destroy(Sprite_data* data) {
   }
 
   SDL_DestroyTexture(data->texture);
-  free(data);
 
   return false;
 }

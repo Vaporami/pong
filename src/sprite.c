@@ -35,7 +35,7 @@ bool Sprite_destroy(Sprite* sprite) {
     return false;
   }
 
-  bool result = true; // 1 ; 0000 0001 ; 0 ; 0000 0000
+  bool result = true;
 
   result &= Sprite_data_destroy(sprite->data);
   result &= Box_destroy(sprite->box);
