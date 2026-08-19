@@ -20,7 +20,6 @@ typedef struct Application {
 
   bool must_update_on_input; 
 
-  // These two bools should be in a separate "game" (or smth like that) struct
   bool must_move_pad_up;
   bool must_move_pad_down;
 
@@ -30,6 +29,10 @@ typedef struct Application {
   Pad* pad;
   Pad* rpad;
   Ball* ball;
+
+  uint32_t pad_score;
+  uint32_t rpad_score;
+  uint32_t max_score;
 
   uint64_t delta_time;
 

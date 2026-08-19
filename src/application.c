@@ -90,6 +90,10 @@ Application* Application_new(void) {
   app->must_move_pad_up      = false;
   app->must_move_pad_down    = false;
 
+  app->pad_score = 0;
+  app->rpad_score = 0;
+  app->max_score = 10;
+
   app->delta_time = 0;
 
   app->running = true;
@@ -177,7 +181,7 @@ bool Application_update_on_events(Application* app) {
   return app->running;
 }
 
-bool Application_Ball_react_to_collisions(Application* app) {
+bool Application_handle_collisions(Application* app) {
   const char* func_title = "Application_Ball_react_to_collisions()";
 
   if (app == NULL) {
@@ -224,6 +228,11 @@ bool Application_Ball_react_to_collisions(Application* app) {
     .x = app->rpad->box->rect.x,
     .y = app->rpad->box->rect.y
   };
+  
+  Fpoint rpad_right_upper_corner = {
+    .x = rpad_left_upper_corner.x + app->rpad->box->rect.w,
+    .y = app->rpad->box->rect.y
+  };
 
   Fpoint rpad_left_lower_corner = {
     .x = app->rpad->box->rect.x,
@@ -235,21 +244,25 @@ bool Application_Ball_react_to_collisions(Application* app) {
     .y = rpad_left_upper_corner.y + (app->rpad->box->rect.h / 2)
   };
 
-  bool ball_touch_pad_x = ball_left_center.x <= pad_right_upper_corner.x;
+  bool ball_touch_pad_x = ball_left_center.x <= pad_right_upper_corner.x && ball_left_center.x >= app->pad->box->rect.x;
   bool ball_touch_pad_y = pad_right_upper_corner.y < ball_left_center.y && ball_left_center.y < pad_right_lower_corner.y;
   bool ball_touch_pad   = ball_touch_pad_x && ball_touch_pad_y;
 
-  bool ball_touch_rpad_x = ball_right_center.x >= rpad_left_upper_corner.x;
+  bool ball_touch_rpad_x = ball_right_center.x >= rpad_left_upper_corner.x && ball_right_center.x <= rpad_right_upper_corner.x;
   bool ball_touch_rpad_y = rpad_left_upper_corner.y < ball_right_center.y && ball_right_center.y < rpad_left_lower_corner.y;
   bool ball_touch_rpad   = ball_touch_rpad_x && ball_touch_rpad_y;
 
   bool ball_touch_win_ceiling = ball_upper_center.y <= 0;
   bool ball_touch_win_floor   = ball_lower_center.y >= app->height;
 
+  bool ball_touch_win_left_wall = ball_left_center.x <= 0;
+  bool ball_touch_win_right_wall = ball_left_center.x >= app->width;
+
   float coeff = 1.25f;
   float applying_coeff = coeff + (app->ball->bounces * 0.25f);
   float angle_coeff = 10.0f;
   if (applying_coeff > 3) applying_coeff = 3;
+
   if (ball_touch_pad && app->ball->raw_velocity.x < 0) {
     Vector v = {
       .x = 300 * applying_coeff,
@@ -258,7 +271,6 @@ bool Application_Ball_react_to_collisions(Application* app) {
 
     Ball_apply_velocity(app->ball, v);
     app->ball->bounces++;
-    SDL_Log("applying_coeff = %f", applying_coeff);
   }
 
   if (ball_touch_rpad && app->ball->raw_velocity.x > 0) {
@@ -269,7 +281,6 @@ bool Application_Ball_react_to_collisions(Application* app) {
 
     Ball_apply_velocity(app->ball, v);
     app->ball->bounces++;
-    SDL_Log("applying_coeff = %f", applying_coeff);
   }
 
   if (ball_touch_win_ceiling) {
@@ -289,13 +300,42 @@ bool Application_Ball_react_to_collisions(Application* app) {
 
     Ball_apply_velocity(app->ball, v);
   }
+
+  if (ball_touch_win_left_wall || ball_touch_win_right_wall) {
+    Vector new_pos = { .x = app->width / 2, .y = app->height / 2 };
+    Ball_set_xy(app->ball, &(app->ball->box->center), new_pos);
+
+    Vector new_raw_velocity = { .x = -300, .y = (float)SDL_rand(300) };
+    int32_t rnum = SDL_rand(100);
+    if (rnum < 50) {
+      new_raw_velocity.y *= -1;
+    }
+    Ball_apply_velocity(app->ball, new_raw_velocity);
+
+    app->ball->bounces = 0;
+    if (ball_touch_win_left_wall) {
+      (app->rpad_score)++;
+    } else {
+      (app->pad_score)++;
+    }
+    SDL_Log("Pad: %u; RPad: %u", app->pad_score, app->rpad_score);
+  }
+
+  return true;
 }
 
 bool Application_update(Application* app) {
-  Application_Ball_react_to_collisions(app);
+  if (app->pad_score >= app->max_score) {
+    SDL_Log("Pad won!");
+    return false;
+  } else if (app->rpad_score >= app->max_score) {
+    SDL_Log("RPad won!");
+    return false;
+  }
+  Application_handle_collisions(app);
   Ball_move_dt(app->ball, app->ball->velocity, app->delta_time);
 
-  Vector rpad_raw_velocity = { .x = 0.0f, .y = 200.0f };
+  Vector rpad_raw_velocity = { .x = 0.0f, .y = 300.0f };
   float ball_rpad_diff_y = app->ball->box->center.y - app->rpad->box->center.y;
   if (ball_rpad_diff_y < 0) {
     rpad_raw_velocity.y *= -1;
@@ -379,7 +419,6 @@ bool Application_main(Application* app) {
       SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Application_render() returned false", func_title);
       return false;
     }
-    SDL_Delay(4);
     end_time = SDL_GetTicks();
     app->delta_time = end_time - start_time;
     start_time = SDL_GetTicks();
