@@ -24,4 +24,8 @@ bool Box_set_x(Box*, Fpoint*, float);
 bool Box_set_y(Box*, Fpoint*, float);
 bool Box_set_xy(Box*, Fpoint*, Vector);
 
+bool Box_check_collisions(Box*, Box*, bool);
+
+bool Box_is_out_of_bounds(Box*, Box*, bool, bool);
+bool Box_is_out_of_Frect_bounds(Box*, Frect*, bool, bool);
 #endif

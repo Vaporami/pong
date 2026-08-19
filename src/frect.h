@@ -15,4 +15,7 @@ bool Frect_set_x(Frect*, Fpoint*, float);
 bool Frect_set_y(Frect*, Fpoint*, float);
 bool Frect_set_xy(Frect*, Fpoint*, Vector);
 
+bool Frect_check_collisions(Frect*, Frect*);
+
+bool Frect_is_out_of_bounds(Frect*, Frect*, bool, bool);
 #endif

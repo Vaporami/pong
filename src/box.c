@@ -162,3 +162,56 @@ bool Box_set_xy(Box* box, Fpoint* pivot, Vector position) {
 
   return result;
 }
+
+bool Box_check_collisions(Box* a, Box* b, bool include_centers_collisions) {
+  const char* func_title = "Box_check_collisions()";
+
+  if (a == NULL)  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : \"a\" box appeared to be NULL!", func_title);
+    return false;
+  }
+
+  if (b == NULL)  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : \"b\" box appeared to be NULL!", func_title);
+    return false;
+  }
+
+  bool result = Frect_check_collisions(&(a->rect), &(b->rect));
+  if (include_centers_collisions) {
+    result &= Fpoint_check_collisions(&(a->center), &(b->center));
+  }
+
+  return result;
+}
+
+bool Box_is_out_of_bounds(Box* box, Box* bounds, bool on_x, bool on_y) {
+  const char* func_title = "Box_is_out_of_bounds()";
+
+  if (box == NULL)  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : box appeared to be NULL!", func_title);
+    return false;
+  }
+
+  if (bounds == NULL)  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : bounds appeared to be NULL!", func_title);
+    return false;
+  }
+
+  return Frect_is_out_of_bounds(&(box->rect), &(bounds->rect), on_x, on_y);
+}
+
+bool Box_is_out_of_Frect_bounds(Box* box, Frect* bounds, bool on_x, bool on_y) {
+  const char* func_title = "Box_is_out_of_Frect_bounds()";
+
+  if (box == NULL)  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : box appeared to be NULL!", func_title);
+    return false;
+  }
+
+  if (bounds == NULL)  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : bounds appeared to be NULL!", func_title);
+    return false;
+  }
+
+  return Frect_is_out_of_bounds(&(box->rect), bounds, on_x, on_y);
+}

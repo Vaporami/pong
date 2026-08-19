@@ -14,4 +14,6 @@ bool Fpoint_set_x(Fpoint*, Fpoint*, float);
 bool Fpoint_set_y(Fpoint*, Fpoint*, float);
 bool Fpoint_set_xy(Fpoint*, Fpoint*, Vector);
 
+bool Fpoint_check_collisions(Fpoint*, Fpoint*);
+
 #endif

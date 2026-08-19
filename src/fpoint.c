@@ -88,3 +88,22 @@ bool Fpoint_set_xy(Fpoint* fpoint, Fpoint* pivot, Vector position) {
 
   return true;
 }
+
+bool Fpoint_check_collisions(Fpoint* a, Fpoint* b) {
+  const char* func_title = "Fpoint_check_collisions()";
+
+  if (a == NULL)  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : \"a\" fpoint appeared to be NULL!", func_title);
+    return false;
+  }
+
+  if (b == NULL)  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : \"b\" fpoint appeared to be NULL!", func_title);
+    return false;
+  }
+
+  bool same_x = a->x == b->x;
+  bool same_y = a->y == b->y;
+
+  return same_x && same_y;
+}
