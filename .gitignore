@@ -4,3 +4,5 @@ TODO.txt
 *.txt
 cbuild.sh
 run.sh
+cbuild
+run
