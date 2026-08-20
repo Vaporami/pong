@@ -19,8 +19,8 @@
 Application* Application_new(void) {
   const char* func_title = "Application_new()";
 
-  const uint32_t  WIDTH   = 1024;
-  const uint32_t  HEIGHT  = 576;
+  const uint32_t  WIDTH   = 800;
+  const uint32_t  HEIGHT  = 600;
   const char*     TITLE   = "Pong";
 
   SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s : Creating a new application's instance...", func_title);
@@ -189,6 +189,68 @@ bool Application_update_on_out_of_bounds(Application* app) {
     return false;
   }
 
+  bool pad_moves_through_the_ceiling = app->pad->box->rect.y <= 0;
+  bool pad_moves_through_the_floor = app->pad->box->rect.y + app->pad->box->rect.h >= app->height;
+
+  bool rpad_moves_through_the_ceiling = app->rpad->box->rect.y <= 0;
+  bool rpad_moves_through_the_floor = app->rpad->box->rect.y + app->rpad->box->rect.h >= app->height;
+
+  if (pad_moves_through_the_ceiling) {
+    Vector original_raw_velocity = app->pad->raw_velocity;
+    Vector one_moment_raw_velocity = {
+      .x = 0,
+      .y = fabsf(app->pad->raw_velocity.y)
+    };
+    Pad_apply_velocity(app->pad, one_moment_raw_velocity);
+    if (!Pad_move_dt(app->pad, app->pad->velocity, app->delta_time)) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Pad_move() returned false!", func_title);
+      return false;
+    }
+    Pad_apply_velocity(app->pad, original_raw_velocity);
+  }
+
+  if (pad_moves_through_the_floor) {
+    Vector original_raw_velocity = app->pad->raw_velocity;
+    Vector one_moment_raw_velocity = {
+      .x = 0,
+      .y = -1 * fabsf(app->pad->raw_velocity.y)
+    };
+    Pad_apply_velocity(app->pad, one_moment_raw_velocity);
+    if (!Pad_move_dt(app->pad, app->pad->velocity, app->delta_time)) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Pad_move() returned false!", func_title);
+      return false;
+    }
+    Pad_apply_velocity(app->pad, original_raw_velocity);
+  }
+
+  if (rpad_moves_through_the_ceiling) {
+    Vector original_raw_velocity = app->rpad->raw_velocity;
+    Vector one_moment_raw_velocity = {
+      .x = 0,
+      .y = fabsf(app->rpad->raw_velocity.y)
+    };
+    Pad_apply_velocity(app->rpad, one_moment_raw_velocity);
+    if (!Pad_move_dt(app->rpad, app->rpad->velocity, app->delta_time)) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Rpad_move() returned false!", func_title);
+      return false;
+    }
+    Pad_apply_velocity(app->rpad, original_raw_velocity);
+  }
+
+  if (rpad_moves_through_the_floor) {
+    Vector original_raw_velocity = app->rpad->raw_velocity;
+    Vector one_moment_raw_velocity = {
+      .x = 0,
+      .y = -1 * fabsf(app->rpad->raw_velocity.y)
+    };
+    Pad_apply_velocity(app->rpad, one_moment_raw_velocity);
+    if (!Pad_move_dt(app->rpad, app->rpad->velocity, app->delta_time)) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Rpad_move() returned false!", func_title);
+      return false;
+    }
+    Pad_apply_velocity(app->rpad, original_raw_velocity);
+  }
+
   bool ball_moves_through_the_ceiling = app->ball->box->rect.y <= 0;
   bool ball_moves_through_the_floor = (app->ball->box->rect.y + app->ball->box->rect.h) >= app->height;
 
@@ -330,17 +392,17 @@ bool Application_render(Application* app) {
     return false;
   }
 
-  if (!Pad_render(app->renderer, app->pad, false, false)) {
+  if (!Pad_render(app->renderer, app->pad, true, true)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_render() returned false", func_title);
     return false;
   }
 
-  if (!Pad_render(app->renderer, app->rpad, false, false)) {
+  if (!Pad_render(app->renderer, app->rpad, true, true)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_render() returned false", func_title);
     return false;
   }
 
-  if (!Ball_render(app->renderer, app->ball, false, false)) {
+  if (!Ball_render(app->renderer, app->ball, true, true)) {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s : Sprite_render() returned false", func_title);
     return false;
   }

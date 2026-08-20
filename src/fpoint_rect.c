@@ -31,14 +31,17 @@ bool Fpoint_rect_check_collisions(Fpoint_rect* a, Fpoint_rect* b) {
     return false;
   }
 
-  bool upper_left_collide   =
+  bool upper_left_collide =
     (b->upper_left.x <= a->upper_left.x && a->upper_left.x <= b->upper_right.x) && (b->upper_left.y <= a->upper_left.y && a->upper_left.y <= b->lower_left.y);
-  bool upper_right_collide
-    = (b->upper_left.x <= a->upper_right.x && a->upper_right.x <= b->upper_right.x) && (b->upper_right.y <= a->upper_right.y && a->upper_right.y <= b->lower_right.y);
-  bool lower_left_collide
-    = (b->lower_left.x <= a->lower_left.x && a->lower_left.x <= b->lower_right.x) && (b->lower_left.y <= a->lower_left.y && a->lower_left.y <= b->upper_left.y);
-  bool lower_right_collide
-    = (b->lower_left.x <= a->lower_right.x && a->lower_right.x <= b->lower_right.x) && (b->lower_right.y <= a->lower_right.y && a->lower_right.y <= b->upper_right.y);
+
+  bool upper_right_collide =
+    (b->upper_left.x <= a->upper_right.x && a->upper_right.x <= b->upper_right.x) && (b->upper_right.y <= a->upper_right.y && a->upper_right.y <= b->lower_right.y);
+
+  bool lower_left_collide =
+    (b->lower_left.x <= a->lower_left.x && a->lower_left.x <= b->lower_right.x) && (b->upper_left.y <= a->lower_left.y && a->lower_left.y <= b->lower_left.y);
+
+  bool lower_right_collide =
+    (b->lower_left.x <= a->lower_right.x && a->lower_right.x <= b->lower_right.x) && (b->upper_right.y <= a->lower_right.y && a->lower_right.y <= b->lower_right.y);
 
   return upper_left_collide || upper_right_collide || lower_left_collide || lower_right_collide;
 }
